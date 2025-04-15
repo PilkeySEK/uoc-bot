@@ -1,5 +1,6 @@
 {
     "token": "discord-bot-token-goes-here",
     "footer_icon_url": "https://media.discordapp.net/attachments/1359068872530989097/1360512646079840369/ChatGPT_Image_2025_4_8_04_55_55.png?ex=67ff5823&is=67fe06a3&hm=21120d065f4a43cbc96d255ee304a77832078885390cfb9038e7d25f70abdb6a&=&format=webp&quality=lossless&width=936&height=936",
-    "client_id": "1361632408322965555"
+    "client_id": "1361632408322965555",
+    "mongo_uri": "mongodb://localhost:27017"
 }
