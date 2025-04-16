@@ -50,10 +50,15 @@ function _noid_has_vote_ended(vote: Vote): boolean {
 
 export async function list_active_votes(): Promise<Vote[]> {
     const votes_cursor = vote_collection.find();
-    let votes: Vote[] = [];
+    const votes: Vote[] = [];
     for await (const vote of votes_cursor) {
         if(_noid_has_vote_ended(vote)) continue;
         votes.push(vote);
     }
     return votes;
+}
+
+export async function set_vote_options(vote_id: string, options: VoteOption[]): Promise<boolean> {
+    const res = await vote_collection.updateOne({id: vote_id}, {$set: {options: options}});
+    return res.acknowledged;
 }

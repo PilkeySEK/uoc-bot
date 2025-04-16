@@ -1,5 +1,5 @@
-import { CommandInteraction, EmbedBuilder, PermissionFlagsBits, SlashCommandBuilder } from 'discord.js';
-import { default_color, default_footer } from '../../util/util';
+import { APIInteractionDataResolvedChannel, CommandInteraction, EmbedBuilder, GuildBasedChannel, MessageFlags, PermissionFlagsBits, SendableChannels, SlashCommandBuilder, TextBasedChannel } from 'discord.js';
+import { default_color, default_footer, send_vote_message } from '../../util/util';
 import { create_vote, Vote, VoteType } from '../../util/db';
 
 export default {
@@ -47,6 +47,10 @@ export default {
             option.setName("description")
                 .setDescription("A good description, if needed")
         )
+        .addChannelOption(option => 
+            option.setName("channel")
+                .setDescription("The channel to post the vote in")
+        )
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
     execute: async (interaction: CommandInteraction) => {
@@ -58,8 +62,9 @@ export default {
         const option2 = interaction.options.get("option2", true).value as string;
         const option3 = interaction.options.get("option3")?.value as string | undefined;
         const option4 = interaction.options.get("option4")?.value as string | undefined;
+        let channel: GuildBasedChannel | TextBasedChannel | APIInteractionDataResolvedChannel | null | undefined = interaction.options.get("channel")?.channel;
 
-        let vote: Vote = {
+        const vote: Vote = {
             id: name,
             description: description == undefined ? "" : description,
             endTimestamp: Date.now() + 3600000 * time,
@@ -72,6 +77,10 @@ export default {
         if(option3 != undefined) vote.options.push({description: option3, voters: []});
         if(option4 != undefined) vote.options.push({description: option4, voters: []});
         const res = await create_vote(vote);
+
+        if(channel == null || channel == undefined) channel = interaction.channel;
+        if(channel == null) return;
+        send_vote_message(channel as SendableChannels, vote);
         if(res) {
             interaction.reply({embeds: [
                 new EmbedBuilder()
@@ -79,7 +88,7 @@ export default {
                     .setColor(default_color)
                     .setTimestamp()
                     .setFooter(default_footer)
-            ]})
+            ], flags: MessageFlags.Ephemeral})
         }
         else {
             interaction.reply({embeds: [
@@ -88,7 +97,7 @@ export default {
                     .setColor(default_color)
                     .setTimestamp()
                     .setFooter(default_footer)
-            ]})
+            ], flags: MessageFlags.Ephemeral})
         }
     }
 }

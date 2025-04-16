@@ -1,13 +1,13 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
-import { Client, Collection, Events, GatewayIntentBits, MessageFlags } from 'discord.js';
+import { Client, Collection, GatewayIntentBits } from 'discord.js';
 import { token } from '../config.json';
-import { Command } from "./util/util";
+import { Command, Event } from "./util/util";
 import { fileURLToPath } from "node:url";
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
-let commands: Collection<string, Command> = new Collection();
+const commands: Collection<string, Command> = new Collection();
 const foldersPath = path.join(path.dirname(fileURLToPath(import.meta.url)), 'commands');
 const commandFolders = fs.readdirSync(foldersPath);
 
@@ -21,30 +21,27 @@ for (const folder of commandFolders) {
 	}
 }
 
-client.on(Events.InteractionCreate, async interaction => {
-	if (!interaction.isChatInputCommand()) return;
-
-	const command = commands.get(interaction.commandName);
-
-	if (!command) {
-		console.error(`No command matching ${interaction.commandName} was found.`);
-		return;
-	}
-
-	try {
-		await command.execute(interaction);
-	} catch (error) {
-		console.error(error);
-		if (interaction.replied || interaction.deferred) {
-			await interaction.followUp({ content: 'There was an error while executing this command!', flags: MessageFlags.Ephemeral });
-		} else {
-			await interaction.reply({ content: 'There was an error while executing this command!', flags: MessageFlags.Ephemeral });
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const eventsPath = path.join(__dirname, 'events');
+const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.ts'));
+for (const file of eventFiles) {
+	const filePath = path.join(eventsPath, file);
+	const event: Event = (await import(filePath)).default;
+	if (event.once) {
+		if(event.commands) {
+			client.once(event.name, (...args) => event.execute(commands, ...args));
+		}
+		else {
+			client.once(event.name, (...args) => event.execute(...args));
+		}
+	} else {
+		if(event.commands) {
+			client.on(event.name, (...args) => event.execute(commands, ...args));
+		}
+		else {
+			client.on(event.name, (...args) => event.execute(...args));
 		}
 	}
-});
-
-client.once(Events.ClientReady, readyClient => {
-	console.log(`Ready! Logged in as ${readyClient.user.tag}`);
-});
+}
 
 client.login(token);
