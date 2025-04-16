@@ -72,7 +72,8 @@ export default {
                 {description: option1, voters: []},
                 {description: option2, voters: []}
             ],
-            type: type == "council_only" ? VoteType.CouncilOnly : VoteType.Everyone
+            type: type == "council_only" ? VoteType.CouncilOnly : VoteType.Everyone,
+            channel: interaction.channelId
         }
         if(option3 != undefined) vote.options.push({description: option3, voters: []});
         if(option4 != undefined) vote.options.push({description: option4, voters: []});
