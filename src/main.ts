@@ -2,7 +2,7 @@ import * as path from "node:path";
 import * as fs from "node:fs";
 import { Client, Collection, GatewayIntentBits } from 'discord.js';
 import { token } from '../config.json';
-import { Command, end_expired_votes, Event } from "./util/util";
+import { Command, Event } from "./util/util";
 import { fileURLToPath } from "node:url";
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -43,9 +43,5 @@ for (const file of eventFiles) {
 		}
 	}
 }
-
-setInterval(()=> {
-	end_expired_votes(client);
-}, 60 * 1000);
 
 client.login(token);
